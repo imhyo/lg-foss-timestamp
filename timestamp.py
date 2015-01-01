@@ -28,6 +28,7 @@ class Timestamp(ndb.Model):
 	"""Models an individual Timestamp entry."""
 	start = ndb.DateTimeProperty(auto_now_add=True)
 	finish = ndb.DateTimeProperty(auto_now_add=False)
+	user = ndb.UserProperty(indexed=False)
 	content = ndb.StringProperty(indexed=False)
 
 	
@@ -71,6 +72,7 @@ class Checkout(webapp2.RequestHandler):
 			timestamp = timestamps[0]
 			timestamp.content = self.request.get('content')
 			timestamp.finish = datetime.datetime.now()
+			timestamp.user = users.get_current_user()
 			timestamp.put()
 		self.redirect('/')
 		
