@@ -2,7 +2,9 @@ import os
 import cgi
 import urllib
 import datetime
+import pytz
 
+from pytz import timezone
 from google.appengine.api import users
 from google.appengine.ext import ndb
 
@@ -37,9 +39,13 @@ def getTimestamps():
 class MainPage(webapp2.RequestHandler):
     def get(self):
 		timestamps = getTimestamps()
+		utc = pytz.timezone('UTC')
+		kst = pytz.timezone('Asia/Seoul')
 		
 		template_values = {
 			'timestamps': timestamps,
+			'utc': utc,
+			'kst': kst,
 		}
 		
 		template = JINJA_ENVIRONMENT.get_template('index.html')

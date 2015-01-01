@@ -17,7 +17,9 @@
 		
 	{% for timestamp in timestamps %}
 		{% if timestamp.finish %}
-			<b>{{ timestamp.start.isoformat() }} ~ {{ timestamp.finish.isoformat() }} </b>
+			{% set sdt = utc.localize(timestamp.start).astimezone(kst) %}
+			{% set fdt = utc.localize(timestamp.finish).astimezone(kst) %}
+			<b>{{ sdt.strftime('%b %d, %H:%m') }} ~ {{ fdt.strftime('%b %d, %H:%m') }} </b>
 			<blockquote>{{ timestamp.content }}</blockquote>
 		{% endif %}
 	{% endfor %}
