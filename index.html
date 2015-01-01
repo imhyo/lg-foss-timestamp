@@ -8,7 +8,8 @@
 		<div><input type="submit" value="Check-in"></div>
 		</form>
 	{% else %}
-		You started working from {{ timestamps[0].start.isoformat() }} <hr>
+		{% set sdt = utc.localize(timestamps[0].start).astimezone(kst) %}
+		You started working from {{ sdt.strftime('%b %d, %H:%M') }} <hr>
 		<form action="checkout" method="post">
 		<div><textarea name="content" rows="5" cols="60"></textarea></div>
 		<div><input type="submit" value="Check-out"></div>
@@ -19,7 +20,7 @@
 		{% if timestamp.finish %}
 			{% set sdt = utc.localize(timestamp.start).astimezone(kst) %}
 			{% set fdt = utc.localize(timestamp.finish).astimezone(kst) %}
-			<b>{{ sdt.strftime('%b %d, %H:%m') }} ~ {{ fdt.strftime('%b %d, %H:%m') }} </b>
+			<b>{{ sdt.strftime('%b %d, %H:%M') }} ~ {{ fdt.strftime('%b %d, %H:%M') }} </b>
 			<blockquote>{{ timestamp.content }}</blockquote>
 		{% endif %}
 	{% endfor %}
