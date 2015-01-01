@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+{% autoescape true %}
+
+<html>
+	<body>
+	{% if timestamps|length == 0 or timestamps[0].finish %}
+		<form action="/checkin" method="post">
+		<div><input type="submit" value="Check-in"></div>
+		</form>
+	{% else %}
+		You started working from {{ timestamps[0].start.isoformat() }} <hr>
+		<form action="checkout" method="post">
+		<div><textarea name="content" rows="5" cols="60"></textarea></div>
+		<div><input type="submit" value="Check-out"></div>
+		</form>
+	{% endif %}
+		
+	{% for timestamp in timestamps %}
+		{% if timestamp.finish %}
+			<b>{{ timestamp.start.isoformat() }} ~ {{ timestamp.finish.isoformat() }} </b>
+			<blockquote>{{ timestamp.content }}</blockquote>
+		{% endif %}
+	{% endfor %}
+	</body>
+</html>
+
+{% endautoescape %}

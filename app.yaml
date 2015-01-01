@@ -7,3 +7,10 @@ threadsafe: true
 handlers:
 - url: /.*
   script: timestamp.application
+  login: required
+  
+libraries:
+- name: webapp2
+  version: latest
+- name: jinja2
+  version: latest
