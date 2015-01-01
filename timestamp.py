@@ -1,6 +1,7 @@
 import os
 import cgi
 import urllib
+import datetime
 
 from google.appengine.api import users
 from google.appengine.ext import ndb
@@ -26,13 +27,16 @@ class Timestamp(ndb.Model):
 	finish = ndb.DateTimeProperty(auto_now_add=False)
 	content = ndb.StringProperty(indexed=False)
 
+def getTimestamps():
+	user = users.get_current_user()
+	
+	timestamps_query = Timestamp.query(
+		ancestor = user_key(user)).order(-Timestamp.start)
+	return (timestamps_query.fetch(5))
+
 class MainPage(webapp2.RequestHandler):
     def get(self):
-		user = users.get_current_user()
-		
-		timestamps_query = Timestamp.query(
-			ancestor = user_key(user)).order(-Timestamp.start)
-		timestamps = timestamps_query.fetch(5)
+		timestamps = getTimestamps()
 		
 		template_values = {
 			'timestamps': timestamps,
@@ -48,8 +52,19 @@ class Checkin(webapp2.RequestHandler):
 		timestamp = Timestamp(parent=user_key(user))
 		timestamp.put()
 		self.redirect('/')
+		
+class Checkout(webapp2.RequestHandler):
+	def post(self):
+		timestamps = getTimestamps()
+		if len(timestamps) > 0:
+			timestamp = timestamps[0]
+			timestamp.content = self.request.get('content')
+			timestamp.finish = datetime.datetime.now()
+			timestamp.put()
+		self.redirect('/')
 
 application = webapp2.WSGIApplication([
     ('/', MainPage),
 	('/checkin', Checkin),
+	('/checkout', Checkout),
 ], debug=True)
