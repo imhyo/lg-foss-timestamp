@@ -58,7 +58,7 @@ class Checkin(webapp2.RequestHandler):
 		timestamp = Timestamp(parent=user_key(user))
 		timestamp.put()
 		self.redirect('/')
-		
+
 class Checkout(webapp2.RequestHandler):
 	def post(self):
 		timestamps = getTimestamps()
@@ -68,9 +68,19 @@ class Checkout(webapp2.RequestHandler):
 			timestamp.finish = datetime.datetime.now()
 			timestamp.put()
 		self.redirect('/')
+		
+class Cancel(webapp2.RequestHandler):
+	def post(self):
+		timestamps = getTimestamps()
+		if len(timestamps) > 0:
+			timestamp = timestamps[0]
+			timestamp.key.delete()
+		self.redirect('/')
+		
 
 application = webapp2.WSGIApplication([
     ('/', MainPage),
 	('/checkin', Checkin),
 	('/checkout', Checkout),
+	('/cancel', Cancel),
 ], debug=True)
