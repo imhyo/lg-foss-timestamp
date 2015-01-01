@@ -27,11 +27,14 @@
 			<blockquote>{{ timestamp.content }}</blockquote>
 		{% endif %}
 	{% endfor %}
+	
+	<hr>
+	<a href="{{ logout_url }}"> Logout </a>
 
 <script>
 function onCancel() {
 	var x;
-	if (confirm("Will you really cancel?") == true) {
+	if (confirm("Are you sure to cancel?") == true) {
 		document.forms["cancel_form"].submit();
 	}
 }

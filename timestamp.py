@@ -23,29 +23,33 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 def user_key(user):
 	return ndb.Key('Username', user.user_id())
 	
+	
 class Timestamp(ndb.Model):
 	"""Models an individual Timestamp entry."""
 	start = ndb.DateTimeProperty(auto_now_add=True)
 	finish = ndb.DateTimeProperty(auto_now_add=False)
 	content = ndb.StringProperty(indexed=False)
 
+	
 def getTimestamps():
 	user = users.get_current_user()
-	
 	timestamps_query = Timestamp.query(
 		ancestor = user_key(user)).order(-Timestamp.start)
 	return (timestamps_query.fetch(5))
 
+	
 class MainPage(webapp2.RequestHandler):
     def get(self):
 		timestamps = getTimestamps()
 		utc = pytz.timezone('UTC')
 		kst = pytz.timezone('Asia/Seoul')
+		logout_url = users.create_logout_url(self.request.uri)
 		
 		template_values = {
 			'timestamps': timestamps,
 			'utc': utc,
 			'kst': kst,
+			'logout_url': logout_url,
 		}
 		
 		template = JINJA_ENVIRONMENT.get_template('index.html')
@@ -59,6 +63,7 @@ class Checkin(webapp2.RequestHandler):
 		timestamp.put()
 		self.redirect('/')
 
+		
 class Checkout(webapp2.RequestHandler):
 	def post(self):
 		timestamps = getTimestamps()
@@ -68,6 +73,7 @@ class Checkout(webapp2.RequestHandler):
 			timestamp.finish = datetime.datetime.now()
 			timestamp.put()
 		self.redirect('/')
+		
 		
 class Cancel(webapp2.RequestHandler):
 	def post(self):
