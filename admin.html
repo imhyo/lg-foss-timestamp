@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+{% autoescape true %}
+
+<html>
+<body>
+	<table>
+		<tr>
+			<form action="add_user" method="post">
+			<input type="text" name="nickname" size="20">
+			<input type="submit" value="Add">
+			</form>
+		</tr>
+	{% for user in users %}
+		<tr> {{ user.nickname }} </tr>
+	{% endfor %}
+	</table>
+</body>
+</html>
+
+{% endautoescape %}

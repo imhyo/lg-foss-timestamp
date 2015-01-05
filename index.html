@@ -2,34 +2,34 @@
 {% autoescape true %}
 
 <html>
-	<body>
-	{% if timestamps|length == 0 or timestamps[0].finish %}
-		<form action="/checkin" method="post">
-		<div><input type="submit" value="Check-in"></div>
-		</form>
-	{% else %}
-		{% set sdt = utc.localize(timestamps[0].start).astimezone(kst) %}
-		You started working from {{ sdt.strftime('%b %d, %H:%M') }} <hr>
-		<form action="checkout" method="post">
-		<div><textarea name="content" rows="5" cols="60"></textarea></div>
-		<div><input type="submit" value="Check-out"></div>
-		</form>
-		<form name="cancel_form" action="/cancel" method="post">
-		</form>
-		<div><button onclick="onCancel()">Cancel</button></div>
-	{% endif %}
-		
-	{% for timestamp in timestamps %}
-		{% if timestamp.finish %}
-			{% set sdt = utc.localize(timestamp.start).astimezone(kst) %}
-			{% set fdt = utc.localize(timestamp.finish).astimezone(kst) %}
-			<b>{{ sdt.strftime('%b %d, %H:%M') }} ~ {{ fdt.strftime('%b %d, %H:%M') }} </b>
-			<blockquote>{{ timestamp.content }}</blockquote>
-		{% endif %}
-	{% endfor %}
+<body>
+{% if timestamps|length == 0 or timestamps[0].finish %}
+	<form action="/checkin" method="post">
+	<div><input type="submit" value="Check-in"></div>
+	</form>
+{% else %}
+	{% set sdt = utc.localize(timestamps[0].start).astimezone(kst) %}
+	You started working from {{ sdt.strftime('%b %d, %H:%M') }} <hr>
+	<form action="checkout" method="post">
+	<div><textarea name="content" rows="5" cols="60"></textarea></div>
+	<div><input type="submit" value="Check-out"></div>
+	</form>
+	<form name="cancel_form" action="/cancel" method="post">
+	</form>
+	<div><button onclick="onCancel()">Cancel</button></div>
+{% endif %}
 	
-	<hr>
-	<a href="{{ logout_url }}"> Logout </a>
+{% for timestamp in timestamps %}
+	{% if timestamp.finish %}
+		{% set sdt = utc.localize(timestamp.start).astimezone(kst) %}
+		{% set fdt = utc.localize(timestamp.finish).astimezone(kst) %}
+		<b>{{ sdt.strftime('%b %d, %H:%M') }} ~ {{ fdt.strftime('%b %d, %H:%M') }} </b>
+		<blockquote>{{ timestamp.content }}</blockquote>
+	{% endif %}
+{% endfor %}
+
+<hr>
+<a href="{{ logout_url }}"> Logout </a>
 
 <script>
 function onCancel() {
