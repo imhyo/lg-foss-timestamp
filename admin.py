@@ -11,7 +11,7 @@ from google.appengine.ext import ndb
 import jinja2
 import webapp2
 
-from data_modules import User
+import data_model
 
 JINJA_ENVIRONMENT = jinja2.Environment(
 	loader = jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -19,7 +19,7 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 	autoescape = True)
 
 def getUsers():
-	users_query = User.query()
+	users_query = data_model.User.query()
 	return (users_query.fetch())
 
 	
@@ -37,7 +37,7 @@ class AddUser(webapp2.RequestHandler):
 	def post(self):
 		nickname = self.request.get('nickname')
 		user_key = ndb.Key('User', nickname)
-		user = User(key = user_key)
+		user = data_model.User(key = user_key)
 		user.nickname = nickname
 		user.put()
 		self.redirect('/admin/')

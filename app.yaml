@@ -12,8 +12,12 @@ handlers:
   script: admin.application
   login: admin
   
+- url: /dashboard.*
+  script: dashboard.application
+  login: required
+  
 - url: /.*
-  script: timestamp.application
+  script: handler.application
   login: required
   
 libraries:

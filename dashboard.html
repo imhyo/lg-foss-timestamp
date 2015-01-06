@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+{% autoescape true %}
+
+<html>
+<body>
+	<ul>
+		{% for week in weeks %}
+			<li> {{ week[0].strftime('%b %d') }} ~ {{ week[1].strftime('%b %d') }}: </li>
+		{% endfor %}
+	</ul>
+</body>
+</html>
+
+{% endautoescape %}

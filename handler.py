@@ -11,22 +11,23 @@ import logging
 from pytz import timezone
 from google.appengine.api import users
 from google.appengine.ext import ndb
-from data_modules import Timestamp
-from data_modules import User
-
-
 from apiclient.discovery import build
 from google.appengine.ext import webapp
 from oauth2client.appengine import OAuth2Decorator
 
+import data_model
+import dashboard
+import settings
+import user_auth
+
 decorator = OAuth2Decorator(
-	client_id='1008598535710-rgfacejdi6pvjudk47lssfnp27lhbigc.apps.googleusercontent.com',
-	client_secret='dbq5-MQ3rvDf6F5ZPs--ubzE',
-#	scope='https://www.googleapis.com/auth/calendar')
-	scope='https://www.googleapis.com/auth/tasks')
+	client_id=settings.CLIENT_ID,
+	client_secret=settings.CLIENT_SECRET,
+	scope=settings.SCOPE)
 
 #service = build('calendar', 'v3')
 service = build('tasks', 'v1')
+
 
 
 
@@ -35,37 +36,23 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 	extensions = ['jinja2.ext.autoescape'],
 	autoescape = True)
 
-# We set a parent key on the 'User' to ensure that they are all in the same
-# entity group. Queries across the single entity group will be consistent.
-def get_user_key(user):
-	return ndb.Key('User', user.nickname())
 
 
-def auth_required(handler):
-	def check_login(self, *args, **kwargs):
-		nickname = users.get_current_user().nickname()
-		user_key = get_user_key(users.get_current_user())
-		users_query = User(key = user_key).query()
-		users_list = users_query.fetch(1)
-		if (not users_list) or (users_list[0].nickname != nickname):
-			self.redirect("/no_authority")
-		else:
-			return handler(self, *args, **kwargs)
-
-	return check_login
 	
-	
+# Returns the list of last 5 working history.
 def getTimestamps():
 	user = users.get_current_user()
-	timestamps_query = Timestamp.query(
-		ancestor = get_user_key(user)).order(-Timestamp.start)
+	timestamps_query = data_model.Timestamp.query(
+		ancestor = user_auth.get_user_key(user)).order(-data_model.Timestamp.start)
 	return (timestamps_query.fetch(5))
 
-	
+
+# Handler for the main page
 class MainPage(webapp2.RequestHandler):
-	@auth_required
+	@user_auth.auth_required
 	def get(self):
 		timestamps = getTimestamps()
+		# utc and kst are passed to the jinja2 framework, so that jinja can convert the UTC timestored in DB into the Asia/Seoul time.
 		utc = pytz.timezone('UTC')
 		kst = pytz.timezone('Asia/Seoul')
 		logout_url = users.create_logout_url(self.request.uri)
@@ -82,16 +69,16 @@ class MainPage(webapp2.RequestHandler):
 
 
 class Checkin(webapp2.RequestHandler):
-	@auth_required
+	@user_auth.auth_required
 	def post(self):
 		user = users.get_current_user();
-		timestamp = Timestamp(parent=get_user_key(user))
+		timestamp = data_model.Timestamp(parent=get_user_key(user))
 		timestamp.put()
 		self.redirect('/')
 
 		
 class Checkout(webapp2.RequestHandler):
-	@auth_required
+	@user_auth.auth_required
 	def post(self):
 		timestamps = getTimestamps()
 		if len(timestamps) > 0:
@@ -104,7 +91,7 @@ class Checkout(webapp2.RequestHandler):
 		
 		
 class Cancel(webapp2.RequestHandler):
-	@auth_required
+	@user_auth.auth_required
 	def post(self):
 		timestamps = getTimestamps()
 		if len(timestamps) > 0:
@@ -116,7 +103,6 @@ class Cancel(webapp2.RequestHandler):
 		
 class NoAuthority(webapp2.RequestHandler):
 	def get(self):
-		logging.info(self.request.uri)
 		logout_url = users.create_logout_url('/')
 		
 		template_values = {
@@ -140,7 +126,8 @@ class Test(webapp2.RequestHandler):
 			self.response.write('<li>%s</li>' % task['title'])
 		self.response.write('</ul></body><html>')
 
-						
+			
+
 
 application = webapp2.WSGIApplication([
 	('/', MainPage),
