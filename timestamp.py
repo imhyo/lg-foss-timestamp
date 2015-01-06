@@ -4,15 +4,13 @@ import urllib
 import datetime
 import pytz
 import httplib2
-
-from pytz import timezone
-from google.appengine.api import users
-from google.appengine.ext import ndb
-
 import jinja2
 import webapp2
 import logging
 
+from pytz import timezone
+from google.appengine.api import users
+from google.appengine.ext import ndb
 from data_modules import Timestamp
 from data_modules import User
 
@@ -20,7 +18,6 @@ from data_modules import User
 from apiclient.discovery import build
 from google.appengine.ext import webapp
 from oauth2client.appengine import OAuth2Decorator
-
 
 decorator = OAuth2Decorator(
 	client_id='1008598535710-rgfacejdi6pvjudk47lssfnp27lhbigc.apps.googleusercontent.com',
@@ -43,13 +40,20 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 def get_user_key(user):
 	return ndb.Key('User', user.nickname())
 
-def checkAuthority(self):
-	nickname = users.get_current_user().nickname()
-	user_key = get_user_key(users.get_current_user())
-	users_query = User(key = user_key).query()
-	users_list = users_query.fetch(1)
-	if (not users_list) or (users_list[0].nickname != nickname):
-		self.redirect("/no_authority")
+
+def auth_required(handler):
+	def check_login(self, *args, **kwargs):
+		nickname = users.get_current_user().nickname()
+		user_key = get_user_key(users.get_current_user())
+		users_query = User(key = user_key).query()
+		users_list = users_query.fetch(1)
+		if (not users_list) or (users_list[0].nickname != nickname):
+			self.redirect("/no_authority")
+		else:
+			return handler(self, *args, **kwargs)
+
+	return check_login
+	
 	
 def getTimestamps():
 	user = users.get_current_user()
@@ -59,8 +63,8 @@ def getTimestamps():
 
 	
 class MainPage(webapp2.RequestHandler):
+	@auth_required
 	def get(self):
-		checkAuthority(self)
 		timestamps = getTimestamps()
 		utc = pytz.timezone('UTC')
 		kst = pytz.timezone('Asia/Seoul')
@@ -78,8 +82,8 @@ class MainPage(webapp2.RequestHandler):
 
 
 class Checkin(webapp2.RequestHandler):
+	@auth_required
 	def post(self):
-		checkAuthority(self)
 		user = users.get_current_user();
 		timestamp = Timestamp(parent=get_user_key(user))
 		timestamp.put()
@@ -87,8 +91,8 @@ class Checkin(webapp2.RequestHandler):
 
 		
 class Checkout(webapp2.RequestHandler):
+	@auth_required
 	def post(self):
-		checkAuthority(self)
 		timestamps = getTimestamps()
 		if len(timestamps) > 0:
 			timestamp = timestamps[0]
@@ -100,13 +104,15 @@ class Checkout(webapp2.RequestHandler):
 		
 		
 class Cancel(webapp2.RequestHandler):
+	@auth_required
 	def post(self):
-		checkAuthority(self)
 		timestamps = getTimestamps()
 		if len(timestamps) > 0:
 			timestamp = timestamps[0]
 			timestamp.key.delete()
 		self.redirect('/')
+
+
 		
 class NoAuthority(webapp2.RequestHandler):
 	def get(self):
