@@ -26,3 +26,6 @@ def auth_required(handler):
 def get_user_key(user):
 	return ndb.Key('User', user.nickname())
 
+
+def get_year_key(user, year):
+	return ndb.Key('User', user.nickname(), 'Year', year)

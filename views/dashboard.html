@@ -1,0 +1,9 @@
+{% extends "main.html" %}
+
+{% block maincontent %}
+	<ul>
+		{% for week in weeks %}
+			<li> {{ week[0].strftime('%b %d') }} ~ {{ week[1].strftime('%b %d') }}: {{ week[2] }} / {{ week[3] }} </li>
+		{% endfor %}
+	</ul>
+{% endblock %}

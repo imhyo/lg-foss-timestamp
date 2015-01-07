@@ -1,0 +1,55 @@
+{% extends "main.html" %}
+
+{% block message %}
+	{{ message }}	
+{% endblock %}
+
+{% block maincontent %}
+
+	{% if timestamps|length == 0 or timestamps[0].finish %}
+		<form action="/checkin" method="post">
+		<div><input type="submit" value="Check-in"></div>
+		</form>
+	{% else %}
+		{% set sdt = utc.localize(timestamps[0].start).astimezone(kst) %}
+		You have been working since {{ sdt.strftime('%b %d, %H:%M') }} <hr>
+		<form name="checkout" action="checkout" method="post" onsubmit="return validateForm()">
+		<div><textarea name="content" rows="5" cols="60"></textarea></div>
+		<div><input type="submit" value="Check-out"></div>
+		</form>
+		<form name="cancel_form" action="/cancel" method="post">
+		</form>
+		<div><button onclick="onCancel()">Cancel</button></div>
+	{% endif %}
+	
+	{% for timestamp in timestamps %}
+		{% if timestamp.finish %}
+			{% set sdt = utc.localize(timestamp.start).astimezone(kst) %}
+			{% set fdt = utc.localize(timestamp.finish).astimezone(kst) %}
+			<b>{{ sdt.strftime('%b %d, %H:%M') }} ~ {{ fdt.strftime('%b %d, %H:%M') }} </b>
+			<blockquote>{{ timestamp.content }}</blockquote>
+		{% endif %}
+	{% endfor %}
+
+	<script>
+	function onCancel()
+	{
+		var x;
+		if (confirm("Are you sure to cancel?") == true)
+		{
+			document.forms["cancel_form"].submit();
+		}
+	}
+	
+	function validateForm()
+	{
+		var a = document.forms["checkout"]["content"].value;
+		if (a == null || a == "")
+		{
+			alert("Please fill in the working log!");
+			return false;
+		}
+	}
+	</script>
+
+{% endblock %}	

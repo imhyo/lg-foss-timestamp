@@ -1,8 +1,6 @@
-<!DOCTYPE html>
-{% autoescape true %}
+{% extends "main.html" %}
 
-<html>
-<body>
+{% block maincontent %}
 	<table>
 		<tr>
 			<form action="add_user" method="post">
@@ -14,7 +12,5 @@
 		<tr> <td>{{ user.nickname }}</td> </tr>
 	{% endfor %}
 	</table>
-</body>
-</html>
 
-{% endautoescape %}
+{% endblock %}

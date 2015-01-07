@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>{% block title %}LG Foss Work Management{% endblock %}</title>
+    <style>
+      input {
+        display: block;
+      }
+    </style>
+  </head>
+
+  <body>
+
+  <div class="content">
+
+    <font color="red">
+    {% block message %}
+    {{ message }}
+    {% endblock %}
+    </font>
+
+    <br>
+
+    {% block maincontent %}
+    {% endblock %}
+    
+  </div>
+
+  <div>
+    <footer>
+      <hr/>
+      <p>
+        <a href="/logout">Logout</a>
+        |
+        <a href="/">Home</a>
+        |
+        <a href="/dashboard">Dashboard</a>
+        |
+      </p>
+    </footer>
+  </div>
+
+
+  </body>
+</html>
+
+{% endautoescape %}

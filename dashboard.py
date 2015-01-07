@@ -20,7 +20,7 @@ import user_auth
 
 
 JINJA_ENVIRONMENT = jinja2.Environment(
-	loader = jinja2.FileSystemLoader(os.path.dirname(__file__)),
+	loader = jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__), 'views')),
 	extensions = ['jinja2.ext.autoescape'],
 	autoescape = True)
 
@@ -51,7 +51,7 @@ class Dashboard(webapp2.RequestHandler):
 		date = datetime.date(year, 1, 1)
 		end_date = datetime.date(year, 12, 31)
 		for i in range(54):
-			weeks[i] = [datetime.date(year, 1, 1), datetime.date(year, 12, 31), 0]
+			weeks[i] = [datetime.date(year, 1, 1), datetime.date(year, 12, 31), 0, 0]
 		w = 0
 		
 		while date.year == year:
@@ -59,11 +59,14 @@ class Dashboard(webapp2.RequestHandler):
 				weeks[w][0] = date
 	
 			if date.weekday() <= 4 and h[date.month-1][date.day-1] == 0:
-				weeks[w][2] += 8
+				weeks[w][3] += 8
 	
 			if date.weekday() == 6:
 				weeks[w][1] = date
 				w += 1
+				
+				if date >= datetime.date.today():
+					break
 			
 			date += one_day
 	
@@ -118,11 +121,9 @@ class Dashboard(webapp2.RequestHandler):
 	
 	def showDashboard(self, nickname, year):
 		weeks = self.getWeeks(nickname, year)
-		logout_url = users.create_logout_url('/')
 		
 		template_values = {
-			'logout_url': logout_url,
-			'weeks': weeks
+			'weeks': weeks,
 		}
 		
 		template = JINJA_ENVIRONMENT.get_template('dashboard.html')
