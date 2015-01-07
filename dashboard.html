@@ -5,7 +5,7 @@
 <body>
 	<ul>
 		{% for week in weeks %}
-			<li> {{ week[0].strftime('%b %d') }} ~ {{ week[1].strftime('%b %d') }}: </li>
+			<li> {{ week[0].strftime('%b %d') }} ~ {{ week[1].strftime('%b %d') }}: {{ week[2] }} </li>
 		{% endfor %}
 	</ul>
 </body>

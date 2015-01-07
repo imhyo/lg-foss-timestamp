@@ -112,7 +112,7 @@ class NoAuthority(webapp2.RequestHandler):
 		template = JINJA_ENVIRONMENT.get_template('no_authority.html')
 		self.response.write(template.render(template_values))
 			
-			
+"""			
 class Test(webapp2.RequestHandler):
 	@decorator.oauth_required
 	def get(self):
@@ -125,7 +125,7 @@ class Test(webapp2.RequestHandler):
 		for task in tasks['items']:
 			self.response.write('<li>%s</li>' % task['title'])
 		self.response.write('</ul></body><html>')
-
+"""
 			
 
 
@@ -135,6 +135,6 @@ application = webapp2.WSGIApplication([
 	('/checkout', Checkout),
 	('/cancel', Cancel),
 	('/no_authority', NoAuthority),
-	('/test', Test),
+#	('/test', Test),
 	(decorator.callback_path, decorator.callback_handler()),
 ], debug=True)

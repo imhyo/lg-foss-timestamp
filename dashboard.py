@@ -41,26 +41,30 @@ class Dashboard(webapp2.RequestHandler):
 			year = datetime.date.today().year
 		else:
 			year = int(year_str)
-		self.showDashboard(user, year)
+		self.showDashboard(user.nickname(), year)
 
 
-	def getWeeks(self, year):
+	def getWeeks(self, nickname, year):
+		h = self.getHolidays(nickname, year)
 		weeks = range(54)
 		one_day = datetime.timedelta(1)
 		date = datetime.date(year, 1, 1)
 		end_date = datetime.date(year, 12, 31)
 		for i in range(54):
-			weeks[i] = [datetime.date(year, 1, 1), datetime.date(year, 12, 31)]
+			weeks[i] = [datetime.date(year, 1, 1), datetime.date(year, 12, 31), 0]
 		w = 0
 		
 		while date.year == year:
 			if date.weekday() == 0:
 				weeks[w][0] = date
 	
+			if date.weekday() <= 4 and h[date.month-1][date.day-1] == 0:
+				weeks[w][2] += 8
+	
 			if date.weekday() == 6:
 				weeks[w][1] = date
 				w += 1
-	
+			
 			date += one_day
 	
 		if date.weekday() == 0:
@@ -72,21 +76,48 @@ class Dashboard(webapp2.RequestHandler):
 
 
 	@decorator.oauth_required
-	def getHolidays(self, user, year):
+	def getHolidays(self, nickname, year):
 		h = range(12)
 		for i in range(12):
 			h[i] = range(31)
+			for j in range(31):
+				h[i][j] = 0
 
-		http = decorator.http()
-		request = service.events().list(calendarId='0uq5t03pfrsh5fkktu1395u9jk@group.calendar.google.com')
-		events = request.execute(http=http)
+#		http = decorator.http()
+#		timeMin = str(year) + '-01-01T00:00:00Z'
+#		timeMax = str(year + 1) + '-01-01T00:00:00Z'
+#		request = service.events().list(calendarId = settings.CALENDAR_ID, timeMin = timeMin, timeMax = timeMax)
+#		events = request.execute(http=http)
+
+		events = {'items': [
+				{'start': {'date': '2015-01-02'}},
+				{'start': {'date': '2015-01-05'}},
+				{'start': {'date': '2015-01-07'}},
+				{'start': {'date': '2015-01-12'}},
+				{'start': {'date': '2015-01-15'}},
+				{'start': {'date': '2015-01-21'}}
+			]}
 		
-		logging.info(events)
+		while 1:
+			items = events['items']
+			for i in range(len(items)):
+				startdate = items[i]['start']['date']
+				m = int(startdate[5:7])
+				d = int(startdate[8:10])
+				h[m-1][d-1] = 1
+				
+			if 'nextPageToken' in events:
+				pageToken = events['nextPageToken']
+				request = service.events().list(calendarId = settings.CALENDAR_ID, timeMin = timeMin, timeMax = timeMax, pageToken = pageToken)
+				events = request.execute(http=http)
+				continue
+			break
+		
+		return h
 
 	
-	def showDashboard(self, user, year):
-		weeks = self.getWeeks(year)
-		self.getHolidays(user, year)
+	def showDashboard(self, nickname, year):
+		weeks = self.getWeeks(nickname, year)
 		logout_url = users.create_logout_url('/')
 		
 		template_values = {
