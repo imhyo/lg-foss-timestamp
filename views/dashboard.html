@@ -1,9 +1,36 @@
 {% extends "main.html" %}
 
 {% block maincontent %}
+	<form name="dashboard" action="dashboard" method="post" onsubmit="return validateForm()">
+	<input type="text" name="year" size="20">
+	<input type="submit" value="Submit">
+	</form>
+	
 	<ul>
 		{% for week in weeks %}
-			<li> {{ week[0].strftime('%b %d') }} ~ {{ week[1].strftime('%b %d') }}: {{ week[2] }} / {{ week[3] }} </li>
+			<li>
+				{{ week[0].strftime('%b %d') }} ~ {{ week[1].strftime('%b %d') }}: 
+				{% if week[2] > 0 %}
+					<a href = '/show_history?min={{ week[0].strftime('%Y%m%d') }}&max={{ week[1].strftime('%Y%m%d') }}'> 
+					{{ week[2] }} </a>
+				{% else %}
+					0
+				{% endif %}
+				/ {{ week[3] }} 
+			</li>
 		{% endfor %}
 	</ul>
+	
+	<script>
+	function validateForm()
+	{
+		var a = document.forms["dashboard"]["year"].value;
+		if (a == null || a == "")
+		{
+			alert("Please fill in the year field!");
+			return false;
+		}
+	}
+	</script>
+	
 {% endblock %}

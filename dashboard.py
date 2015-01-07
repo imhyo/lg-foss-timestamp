@@ -1,14 +1,10 @@
 import os
-import cgi
-import urllib
 import datetime
 import pytz
-import httplib2
 import jinja2
 import webapp2
 import logging
 
-from pytz import timezone
 from google.appengine.api import users
 from google.appengine.ext import ndb
 from apiclient.discovery import build
@@ -17,6 +13,8 @@ from oauth2client.appengine import OAuth2Decorator
 
 import settings
 import user_auth
+import data_model
+import history
 
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -35,26 +33,29 @@ service = build('calendar', 'v3')
 class Dashboard(webapp2.RequestHandler):
 	@user_auth.auth_required
 	def get(self):
-		user = users.get_current_user()
-		year_str = self.request.get('year')
-		if (not year_str):
-			year = datetime.date.today().year
-		else:
-			year = int(year_str)
-		self.showDashboard(user.nickname(), year)
+		self.showDashboard()
+		
+	def post(self):
+		self.showDashboard()
 
-
-	def getWeeks(self, nickname, year):
-		h = self.getHolidays(nickname, year)
+	def getWeekOfYear(self, year, date):
+		new_year = datetime.date(year, 1, 1)
+		monday = new_year - datetime.timedelta(1) * new_year.weekday()
+		t = date - monday
+		return (t.days/7)
+		
+	def getEmptyWeeks(self, year, h):
 		weeks = range(54)
 		one_day = datetime.timedelta(1)
+		today = datetime.date.today()
 		date = datetime.date(year, 1, 1)
 		end_date = datetime.date(year, 12, 31)
+		
 		for i in range(54):
-			weeks[i] = [datetime.date(year, 1, 1), datetime.date(year, 12, 31), 0, 0]
+			weeks[i] = [datetime.date(year, 1, 1), datetime.date(year, 12, 31), 0.0, 0]
 		w = 0
 		
-		while date.year == year:
+		while date.year == year and date <= today:
 			if date.weekday() == 0:
 				weeks[w][0] = date
 	
@@ -65,17 +66,46 @@ class Dashboard(webapp2.RequestHandler):
 				weeks[w][1] = date
 				w += 1
 				
-				if date >= datetime.date.today():
-					break
-			
 			date += one_day
 	
 		if date.weekday() == 0:
 			w -= 1
 		else:
-			weeks[w][1] = (date - one_day)
+			date -= one_day
+			weeks[w][1] = date
 			
 		return weeks[0:w+1]
+
+		
+	def calcWorkingHours(self, nickname, year, weeks):
+		utc = pytz.timezone('UTC')
+		kst = pytz.timezone('Asia/Seoul')
+		user = users.get_current_user()
+		sd = datetime.date(year, 1, 1)
+		ed = datetime.date(year, 12, 31)
+		timestamps = history.getHistory(min = sd, max = ed)
+		
+		for timestamp in timestamps:
+			if (timestamp.finish is None):
+				continue
+			sdt = utc.localize(timestamp.start).astimezone(kst)
+			fdt = utc.localize(timestamp.finish).astimezone(kst)
+			timedelta = fdt - sdt
+
+			sd = sdt.date()
+			w = self.getWeekOfYear(year, sd)
+			weeks[w][2] += timedelta.total_seconds() / 3600.0
+		
+	def roundWorkingHours(self, weeks):
+		for week in weeks:
+			week[2] = round(week[2], 1)
+		
+	def getWeeks(self, nickname, year):
+		h = self.getHolidays(nickname, year)
+		weeks = self.getEmptyWeeks(year, h)
+		self.calcWorkingHours(nickname, year, weeks)
+		self.roundWorkingHours(weeks)
+		return weeks
 
 
 	@decorator.oauth_required
@@ -119,8 +149,14 @@ class Dashboard(webapp2.RequestHandler):
 		return h
 
 	
-	def showDashboard(self, nickname, year):
-		weeks = self.getWeeks(nickname, year)
+	def showDashboard(self):
+		user = users.get_current_user()
+		year_str = self.request.get('year')
+		if (not year_str):
+			year = datetime.date.today().year
+		else:
+			year = int(year_str)
+		weeks = self.getWeeks(user.nickname(), year)
 		
 		template_values = {
 			'weeks': weeks,

@@ -16,6 +16,10 @@ handlers:
   script: dashboard.application
   login: required
   
+- url: /show_history.*
+  script: show_history.application
+  login: required
+  
 - url: /.*
   script: handler.application
   login: required

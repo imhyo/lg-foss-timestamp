@@ -14,22 +14,15 @@
 		{% set sdt = utc.localize(timestamps[0].start).astimezone(kst) %}
 		You have been working since {{ sdt.strftime('%b %d, %H:%M') }} <hr>
 		<form name="checkout" action="checkout" method="post" onsubmit="return validateForm()">
-		<div><textarea name="content" rows="5" cols="60"></textarea></div>
-		<div><input type="submit" value="Check-out"></div>
+		<textarea name="content" rows="5" cols="60"></textarea>
+		<input type="submit" value="Check-out" style="width:200px">
 		</form>
 		<form name="cancel_form" action="/cancel" method="post">
 		</form>
-		<div><button onclick="onCancel()">Cancel</button></div>
+		<div><button style="width:200px" onclick="onCancel()">Cancel</button></div>
 	{% endif %}
-	
-	{% for timestamp in timestamps %}
-		{% if timestamp.finish %}
-			{% set sdt = utc.localize(timestamp.start).astimezone(kst) %}
-			{% set fdt = utc.localize(timestamp.finish).astimezone(kst) %}
-			<b>{{ sdt.strftime('%b %d, %H:%M') }} ~ {{ fdt.strftime('%b %d, %H:%M') }} </b>
-			<blockquote>{{ timestamp.content }}</blockquote>
-		{% endif %}
-	{% endfor %}
+
+	{% include 'history.html' %}
 
 	<script>
 	function onCancel()

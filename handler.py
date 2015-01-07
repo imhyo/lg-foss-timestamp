@@ -1,24 +1,19 @@
 import os
-import cgi
-import urllib
 import datetime
 import pytz
-import httplib2
 import jinja2
 import webapp2
 import logging
 
-from pytz import timezone
 from google.appengine.api import users
 from google.appengine.ext import ndb
-from apiclient.discovery import build
 from google.appengine.ext import webapp
-from oauth2client.appengine import OAuth2Decorator
 
 import data_model
 import dashboard
 import settings
 import user_auth
+import history
 
 
 JINJA_ENVIRONMENT = jinja2.Environment(
@@ -27,20 +22,11 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 	autoescape = True)
 
 
-
-# Returns the list of last 5 working history.
-def getTimestamps():
-	user = users.get_current_user()
-	timestamps_query = data_model.Timestamp.query(
-		ancestor = user_auth.get_user_key(user)).order(-data_model.Timestamp.start)
-	return (timestamps_query.fetch(5))
-
-
 # Handler for the main page
 class MainPage(webapp2.RequestHandler):
 	@user_auth.auth_required
 	def get(self):
-		timestamps = getTimestamps()
+		timestamps = history.getHistory(num=5)
 		# utc and kst are passed to the jinja2 framework, so that jinja can convert the UTC timestored in DB into the Asia/Seoul time.
 		utc = pytz.timezone('UTC')
 		kst = pytz.timezone('Asia/Seoul')
@@ -59,15 +45,15 @@ class Checkin(webapp2.RequestHandler):
 	@user_auth.auth_required
 	def post(self):
 		user = users.get_current_user();
-		timestamp = data_model.Timestamp(parent=user_auth.get_year_key(user, datetime.datetime.now().year))
+		timestamp = data_model.Timestamp(parent=user_auth.get_user_key(user))
 		timestamp.put()
 		self.redirect('/')
 
-		
+
 class Checkout(webapp2.RequestHandler):
 	@user_auth.auth_required
 	def post(self):
-		timestamps = getTimestamps()
+		timestamps = history.getHistory()
 		if len(timestamps) > 0:
 			timestamp = timestamps[0]
 			timestamp.content = self.request.get('content')
