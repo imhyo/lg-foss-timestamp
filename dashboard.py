@@ -35,6 +35,7 @@ class Dashboard(webapp2.RequestHandler):
 	def get(self):
 		self.showDashboard()
 		
+	@user_auth.auth_required
 	def post(self):
 		self.showDashboard()
 
@@ -54,7 +55,7 @@ class Dashboard(webapp2.RequestHandler):
 		for i in range(54):
 			weeks[i] = [datetime.date(year, 1, 1), datetime.date(year, 12, 31), 0.0, 0]
 		w = 0
-		
+
 		while date.year == year and date <= today:
 			if date.weekday() == 0:
 				weeks[w][0] = date
@@ -108,7 +109,7 @@ class Dashboard(webapp2.RequestHandler):
 		return weeks
 
 
-	@decorator.oauth_required
+#	@decorator.oauth_required
 	def getHolidays(self, nickname, year):
 		h = range(12)
 		for i in range(12):
@@ -145,7 +146,7 @@ class Dashboard(webapp2.RequestHandler):
 				events = request.execute(http=http)
 				continue
 			break
-		
+
 		return h
 
 	

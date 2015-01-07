@@ -66,7 +66,7 @@ class Checkout(webapp2.RequestHandler):
 class Cancel(webapp2.RequestHandler):
 	@user_auth.auth_required
 	def post(self):
-		timestamps = getTimestamps()
+		timestamps = history.getHistory()
 		if len(timestamps) > 0:
 			timestamp = timestamps[0]
 			timestamp.key.delete()
